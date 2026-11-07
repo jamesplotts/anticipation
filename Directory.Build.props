@@ -1,0 +1,19 @@
+<Project>
+  <!-- Local paths, not committed. Copy Paths.user.example to Paths.user first. -->
+  <Import Project="$(MSBuildThisFileDirectory)Paths.user" Condition="Exists('$(MSBuildThisFileDirectory)Paths.user')" />
+
+  <PropertyGroup>
+    <TargetFramework>net472</TargetFramework>
+    <LangVersion>9.0</LangVersion>
+    <Nullable>disable</Nullable>
+    <ImplicitUsings>disable</ImplicitUsings>
+    <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <Version>0.1.0</Version>
+    <GameManagedDir Condition="'$(GameManagedDir)' == ''">$(GameDir)/Railroader_Data/Managed</GameManagedDir>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+    <DebugType>none</DebugType>
+  </PropertyGroup>
+</Project>

@@ -1,0 +1,46 @@
+<Project>
+  <!-- Game DLLs: compile-time references only, never shipped. -->
+  <ItemGroup>
+    <Reference Include="@(GameAssembly)">
+      <HintPath>$(GameManagedDir)/%(Identity).dll</HintPath>
+      <Private>false</Private>
+    </Reference>
+  </ItemGroup>
+
+  <Target Name="CheckGameDir" BeforeTargets="ResolveReferences">
+    <Error Condition="!Exists('$(GameManagedDir)/Railroader.Modding.dll')"
+           Text="Railroader DLLs not found in '$(GameManagedDir)'. Copy Paths.user.example to Paths.user and set GameDir." />
+  </Target>
+
+  <!-- Info.json in the source has __VERSION__; write the real one next to the DLL. -->
+  <Target Name="RenderManifest" AfterTargets="Build">
+    <PropertyGroup>
+      <ManifestText>$([System.IO.File]::ReadAllText('$(MSBuildProjectDirectory)/Info.json').Replace('__VERSION__', '$(Version)'))</ManifestText>
+    </PropertyGroup>
+    <WriteLinesToFile File="$(OutDir)Info.json" Lines="$(ManifestText)" Overwrite="true" WriteOnlyWhenDifferent="true" />
+  </Target>
+
+  <ItemGroup>
+    <PackFile Include="$(OutDir)$(AssemblyName).dll;$(OutDir)Info.json" />
+    <PackFile Include="$(MSBuildThisFileDirectory)README.md;$(MSBuildThisFileDirectory)LICENSE" />
+  </ItemGroup>
+
+  <!-- Debug: copy the mod into the game's ModDev folder. -->
+  <Target Name="DeployModDev" AfterTargets="RenderManifest" Condition="'$(Configuration)' == 'Debug' AND '$(ModDevDir)' != '' AND '$(Deploy)' != 'false'">
+    <Copy SourceFiles="@(PackFile)" DestinationFolder="$(ModDevDir)" SkipUnchangedFiles="true" />
+    <Message Importance="high" Text="$(AssemblyName) deployed to $(ModDevDir)" />
+  </Target>
+
+  <!-- Release: bin/Anticipation/ plus bin/Anticipation_<version>.zip for Nexus/GitHub. -->
+  <Target Name="PackageRelease" AfterTargets="RenderManifest" Condition="'$(Configuration)' == 'Release'">
+    <PropertyGroup>
+      <PackRoot>$(MSBuildThisFileDirectory)bin/</PackRoot>
+      <PackDir>$(PackRoot)stage/$(AssemblyName)/</PackDir>
+    </PropertyGroup>
+    <RemoveDir Directories="$(PackRoot)stage" />
+    <Copy SourceFiles="@(PackFile)" DestinationFolder="$(PackDir)" />
+    <Delete Files="$(PackRoot)$(AssemblyName)_$(Version).zip" />
+    <ZipDirectory SourceDirectory="$(PackRoot)stage" DestinationFile="$(PackRoot)$(AssemblyName)_$(Version).zip" />
+    <Message Importance="high" Text="$(AssemblyName) release: $(PackRoot)$(AssemblyName)_$(Version).zip" />
+  </Target>
+</Project>

@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <AssemblyName>Anticipation</AssemblyName>
+    <RootNamespace>Anticipation</RootNamespace>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <GameAssembly Include="Railroader.Modding" />
+    <GameAssembly Include="Railroader" />
+    <GameAssembly Include="Core" />
+    <GameAssembly Include="UnityEngine" />
+    <GameAssembly Include="UnityEngine.CoreModule" />
+    <GameAssembly Include="UnityEngine.UI" />
+    <GameAssembly Include="UnityEngine.UIModule" />
+    <GameAssembly Include="UnityEngine.InputLegacyModule" />
+    <GameAssembly Include="UnityEngine.TextRenderingModule" />
+    <GameAssembly Include="Unity.TextMeshPro" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NETFramework.ReferenceAssemblies" Version="1.0.3" PrivateAssets="all" />
+  </ItemGroup>
+</Project>

@@ -1,0 +1,6 @@
+bin/
+obj/
+Paths.user
+*.user
+.vs/
+.vscode/

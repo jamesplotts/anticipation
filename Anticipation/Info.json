@@ -1,0 +1,11 @@
+{
+  "identifier": "jamesplotts/anticipation",
+  "version": "__VERSION__",
+  "name": "Anticipation",
+  "author": "jamesplotts",
+  "description": "A window listing every car you've sent off the railroad through an interchange, what it went for, and when to expect it back. Open it with the hourglass button at the top right.",
+  "assemblies": ["Anticipation.dll"],
+  "dependencies": {
+    "required": ["rr/game >=0.6.0"]
+  }
+}
