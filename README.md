@@ -1,5 +1,8 @@
 # Anticipation
 
+Source: https://github.com/jamesplotts/anticipation
+Download: https://www.nexusmods.com/railroader/mods/2104 (or the GitHub releases)
+
 A Railroader mod for the 0.6 "Maintenance of Way" built-in mod loader.
 
 Send a car through an interchange to be loaded, at an off-map coal mine or oil terminal for example, and it leaves the map until the railroad brings it back. Anticipation keeps track of those cars for you.
