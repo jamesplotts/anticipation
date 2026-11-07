@@ -5,11 +5,11 @@ Download: https://www.nexusmods.com/railroader/mods/2104 (or the GitHub releases
 
 A Railroader mod for the 0.6 "Maintenance of Way" built-in mod loader.
 
-Send a car through an interchange to be loaded, at an off-map coal mine or oil terminal for example, and it leaves the map until the railroad brings it back. Anticipation keeps track of those cars for you.
+Send a car through an interchange to be loaded, such as coal from Carolina Fuel Co. or ties from Atlantic Locomotive Works, and it leaves the map until the railroad brings it back. Anticipation keeps track of those cars for you.
 
 - **Click the hourglass** in the top-right button row (next to the Switch List) to open the window. Click it again to close.
 - The window lists every car that's off the railroad, grouped by the interchange it will come back to. For each car it shows:
-  - what it went for, such as "Coal from Sylva Mine";
+  - what it went for, such as "Coal from Carolina Fuel Co.";
   - when it's expected back: the day, the time, and how long until then. The time is the first interchange service after the car is ready, including any extra service you've scheduled;
   - a "held over" note if the car missed its service because the interchange was full. It's then expected at the next service.
 - Equipment you've bought and are waiting for is listed too, with the price you paid.
