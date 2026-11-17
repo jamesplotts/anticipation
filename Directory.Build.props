@@ -9,7 +9,7 @@
     <ImplicitUsings>disable</ImplicitUsings>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <GenerateDocumentationFile>false</GenerateDocumentationFile>
-    <Version>0.1.0</Version>
+    <Version>0.1.1</Version>
     <GameManagedDir Condition="'$(GameManagedDir)' == ''">$(GameDir)/Railroader_Data/Managed</GameManagedDir>
   </PropertyGroup>
 
