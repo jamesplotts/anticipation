@@ -75,13 +75,15 @@ namespace Anticipation
             // Persistent (Inspector) listeners can't be removed, so replace the whole event.
             open.onClick = new Button.ButtonClickedEvent();
             open.onClick.AddListener(new UnityAction(AnticipationWindow.Toggle));
-            foreach (Image image in clone.GetComponentsInChildren<Image>(true))
+            // The icon is the last image in the button: the button's own image when it has no
+            // separate background, so the root can't be skipped.
+            Image[] images = clone.GetComponentsInChildren<Image>(true);
+            if (images.Length > 0)
             {
-                if (image.gameObject != clone)
-                {
-                    image.sprite = Icon();
-                    image.preserveAspect = true;
-                }
+                Image icon = images[images.Length - 1];
+                icon.sprite = Icon();
+                icon.overrideSprite = null;
+                icon.preserveAspect = true;
             }
             foreach (UITooltipProvider tip in clone.GetComponentsInChildren<UITooltipProvider>(true))
                 tip.DynamicTooltipInfo = () => new TooltipInfo("Anticipation", "Cars off the railroad, and when to expect them back.");
@@ -97,20 +99,31 @@ namespace Anticipation
             return null;
         }
 
-        // A white hourglass on transparent, tinted by the button like the game's own icons.
+        // An hourglass, drawn in the cream of the game's own icons (their colour is in their
+        // pictures, not the button's tint).
         private static Sprite Icon()
         {
             if (_icon != null)
                 return _icon;
             const int size = 64;
-            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear };
+            var texture = new Texture2D(size, size, TextureFormat.RGBA32, false) { filterMode = FilterMode.Bilinear, wrapMode = TextureWrapMode.Clamp };
             var pixels = new Color32[size * size];
             for (int y = 0; y < size; y++)
             {
                 for (int x = 0; x < size; x++)
                 {
-                    float a = Coverage(x + 0.5f, y + 0.5f);
-                    pixels[y * size + x] = new Color32(255, 255, 255, (byte)(a * 255));
+                    // 4 x 4 samples a pixel for smooth edges. Texture rows run up; the drawing's run down.
+                    int hits = 0;
+                    for (int i = 0; i < 4; i++)
+                    {
+                        for (int j = 0; j < 4; j++)
+                        {
+                            float px = x + (i + 0.5f) / 4f, py = size - y - (j + 0.5f) / 4f;
+                            if (Covered(56f + (px - 32f) / Scale, 65.5f + (py - 32f) / Scale))
+                                hits++;
+                        }
+                    }
+                    pixels[y * size + x] = new Color32(220, 212, 200, (byte)(hits * 255 / 16));
                 }
             }
             texture.SetPixels32(pixels);
@@ -119,27 +132,38 @@ namespace Anticipation
             return _icon;
         }
 
-        // How much of the pixel at (x, y) the hourglass covers: two caps, an outlined glass,
-        // and sand in the lower bulb.
-        private static float Coverage(float x, float y)
+        // The drawing is 112 x 131 units, centred on (56, 65.5), y down; this fits it to the 64 px icon.
+        private const float Scale = 0.52f;
+
+        // Whether the point (u, v) of the drawing is solid: a cap at top and bottom, the glass
+        // between them pinched to a neck, hollow above the neck, with sand falling in a thin
+        // stream onto a pile in the lower bulb.
+        private static bool Covered(float u, float v)
         {
-            float cx = 32f;
-            if ((y >= 6 && y <= 11) || (y >= 53 && y <= 58))
-                return x >= 12 && x <= 52 ? 1f : 0f;
-            if (y < 11 || y > 53)
-                return 0f;
-            // Half-width of the glass: wide at the caps, a neck in the middle.
-            float t = Mathf.Abs(y - 32f) / 21f;
-            float half = 3f + 15f * t * t * (3f - 2f * t);
-            float d = Mathf.Abs(x - cx);
-            if (d > half + 0.5f)
-                return 0f;
-            float edge = Mathf.Clamp01(half + 0.5f - d);
-            if (d >= half - 3.5f)
-                return edge;
-            // Sand (texture y runs up): the bottom of the lower bulb, and a thin stream from the neck.
-            bool sand = y < 22f || (y < 32f && d < 1.2f);
-            return sand ? 1f : 0f;
+            if (Cap(u, v, 10f, 19f) || Cap(u, v, 112f, 121f))
+                return true;
+            if (v < 18f || v > 113f)
+                return false;
+            float t = Mathf.Abs(v - 65.5f) / 46.5f;
+            float half = 17f + 17f * Mathf.SmoothStep(0f, 1f, Mathf.InverseLerp(0.1f, 0.8f, t));
+            float d = Mathf.Abs(u - 56f);
+            if (d >= half)
+                return false;
+            float inner = half - 9f;
+            if (v >= 32f && v <= 65.5f && d < inner)
+                return false;
+            if (v >= 62f && v <= 96f && d < 2f)
+                return false;
+            if (v >= 90f && v <= 110f && d < Mathf.Min((v - 90f) / 20f * 26f, inner))
+                return false;
+            return true;
+        }
+
+        private static bool Cap(float u, float v, float top, float bottom)
+        {
+            const float r = 4.5f;
+            float cu = Mathf.Clamp(u, 10f + r, 102f - r), cv = Mathf.Clamp(v, top + r, bottom - r);
+            return (u - cu) * (u - cu) + (v - cv) * (v - cv) <= r * r;
         }
     }
 }
