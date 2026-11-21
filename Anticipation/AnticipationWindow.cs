@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Core;
 using Game;
+using KeyValue.Runtime;
 using Model;
 using UI.Builder;
 using UI.Windows;
@@ -47,6 +48,9 @@ namespace Anticipation
         {
             foreach (IDisposable observer in OffRailroad.ObserveAll(builder.Rebuild))
                 builder.AddObserver(observer);
+            IKeyValueObject store = OffRailroad.GameStore;
+            if (store != null)
+                builder.RebuildOnPropertyChange(store, OffRailroad.LoadBrokerKey);
             List<Away> all = OffRailroad.All();
             if (all == null)
             {
@@ -55,7 +59,7 @@ namespace Anticipation
             }
             if (all.Count == 0)
             {
-                builder.AddLabelEmptyState("No cars are off the railroad. Cars sent through an interchange to be loaded, and equipment you've bought, show up here until they're back.");
+                builder.AddLabelEmptyState("No cars are off the railroad. Cars sent through an interchange to be loaded, equipment you've bought, and Load Broker orders show up here until they're on the railroad.");
                 return;
             }
             builder.VScrollView(scroll =>
@@ -84,6 +88,8 @@ namespace Anticipation
 
         private static string Names(Away away)
         {
+            if (away.OnOrder)
+                return "On order (Load Broker)";
             List<string> names = Shown(away).Select(c => c.DisplayName).ToList();
             if (names.Count == 0)
                 names = away.Cars.Select(c => c.DisplayName).ToList();
@@ -96,7 +102,7 @@ namespace Anticipation
             string when = away.Expected <= now ? "any moment"
                 : $"{Day(away.Expected, now)} {away.Expected.TimeString()} (in {away.Expected.IntervalString(now, GameDateTimeInterval.Style.Short)})";
             string held = away.HeldOver ? ", <color=#E0A040>held over: the interchange was full</color>" : "";
-            return $"{away.What}\nBack {when}{held}";
+            return $"{away.What}\n{(away.OnOrder ? "Arrives" : "Back")} {when}{held}";
         }
 
         private static string Day(GameDateTime time, GameDateTime now)

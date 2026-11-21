@@ -1,9 +1,12 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using Game;
+using Game.State;
+using KeyValue.Runtime;
 using Model;
 using Model.Ops;
 
@@ -21,6 +24,8 @@ namespace Anticipation
         public GameDateTime Expected;
         // Due, and the service that should have brought them has passed (the interchange was full).
         public bool HeldOver;
+        // Not a car yet: a Load Broker order, which becomes a car when it comes in.
+        public bool OnOrder;
     }
 
     // Reads the game's return schedules. Each interchange, and each off-map industry served
@@ -127,6 +132,7 @@ namespace Anticipation
                     all.Add(away);
                 }
             }
+            all.AddRange(LoadBrokerOrders(ops, now));
             return all.OrderBy(a => a.Expected.TotalSeconds).ToList();
         }
 
@@ -139,6 +145,62 @@ namespace Anticipation
             }
             int paid = _paid == null ? 0 : (int)_paid.GetValue(group);
             return paid > 0 ? $"Purchased, {paid:C0}" : "Off the railroad";
+        }
+
+        // Load Broker (jamesplotts/loadbroker), if it's installed, keeps its pending orders in the
+        // game's key-value store under this key: one dictionary per carload, with the interchange,
+        // load, supplier and the time it can come in. Read it directly; neither mod needs the other.
+        public const string LoadBrokerKey = "loadbroker";
+
+        public static IKeyValueObject GameStore
+        {
+            get
+            {
+                try { return StateManager.Shared?.Storage?.GameKeyValueObject; }
+                catch (Exception) { return null; }
+            }
+        }
+
+        private static IEnumerable<Away> LoadBrokerOrders(OpsController ops, GameDateTime now)
+        {
+            IKeyValueObject store = GameStore;
+            if (store == null)
+                yield break;
+            Value saved = store[LoadBrokerKey];
+            if (saved.Type != KeyValue.Runtime.ValueType.Array)
+                yield break;
+            foreach (Value order in saved.ArrayValue)
+            {
+                string interchangeId = order["interchange"].StringValue;
+                Interchange interchange = ops.AllInterchanges?.FirstOrDefault(i => i.Identifier == interchangeId);
+                if (!double.TryParse(order["due"].StringValue, NumberStyles.Float, CultureInfo.InvariantCulture, out double due))
+                    continue;
+                string loaderId = order["loader"].StringValue;
+                InterchangedIndustryLoader loader = interchange?.Industry?.GetComponentsInChildren<InterchangedIndustryLoader>()
+                    .FirstOrDefault(l => l.Identifier == loaderId);
+                string load = Model.Ops.Definition.CarLoadLibrary.GetLoad(order["load"].StringValue)?.description ?? order["load"].StringValue;
+                string from = loader != null ? " from " + loader.name : "";
+                int cost = order["cost"].IntValue;
+                var away = new Away
+                {
+                    Cars = new List<Car>(),
+                    OnOrder = true,
+                    What = $"{load}{from}, ordered for {cost:C0}",
+                    Interchange = interchange,
+                    Due = new GameDateTime(due),
+                };
+                away.Expected = away.Due;
+                if (interchange != null)
+                {
+                    away.Expected = interchange.GetServiceTimeAtOrAfter(away.Due);
+                    if (away.Expected < now)
+                    {
+                        away.HeldOver = true;
+                        away.Expected = interchange.GetNextServiceTime(now, out _);
+                    }
+                }
+                yield return away;
+            }
         }
 
         // Calls back whenever any schedule changes (cars sent off, or cars returned).

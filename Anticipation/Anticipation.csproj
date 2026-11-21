@@ -8,6 +8,7 @@
     <GameAssembly Include="Railroader.Modding" />
     <GameAssembly Include="Railroader" />
     <GameAssembly Include="Core" />
+    <GameAssembly Include="KeyValue.Runtime" />
     <GameAssembly Include="UnityEngine" />
     <GameAssembly Include="UnityEngine.CoreModule" />
     <GameAssembly Include="UnityEngine.UI" />
