@@ -12,6 +12,7 @@ Send a car through an interchange to be loaded, such as coal from Carolina Fuel 
   - what it went for, such as "Coal from Carolina Fuel Co.";
   - when it's expected back: the day, the time, and how long until then. The time is the first interchange service after the car is ready, including any extra service you've scheduled;
   - a "held over" note if the car missed its service because the interchange was full. It's then expected at the next service.
+- If you also run [Load Broker](https://github.com/jamesplotts/loadbroker), the carloads you've ordered through it are listed too, as "On order (Load Broker)", with when they'll arrive. Neither mod needs the other.
 - Equipment you've bought and are waiting for is listed too, with the price you paid.
 - The list updates by itself as cars leave and come back, and the countdowns tick down as the clock runs.
 
