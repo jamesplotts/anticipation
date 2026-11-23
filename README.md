@@ -35,3 +35,19 @@ Copy `Paths.user.example` to `Paths.user` and set `GameDir` (and `ModDevDir` for
 - `dotnet build Anticipation/Anticipation.csproj -c Release` writes `bin/Anticipation_<version>.zip`.
 
 MIT licensed.
+
+## Changelog
+
+### 0.2.0 (2026-11-23)
+- New **Table** view: one row per car, in three columns: Car #, Arrival Time (with a countdown) and Description. Still grouped by interchange.
+- **Log** and **Table** buttons at the top of the window switch views. The window remembers your choice; Table is the default.
+- README notes a reported conflict with East Whittier yard mods (track flashing); the cause isn't known yet.
+
+### 0.1.2 (2026-11-21)
+- Carloads ordered with [Load Broker](https://www.nexusmods.com/railroader/mods/2376) are listed too, as "On order (Load Broker)", with what was ordered, from whom, the price and when it arrives. They drop off the list when the car comes in. Load Broker isn't required.
+
+### 0.1.1 (2026-11-16)
+- The button shows its own hourglass icon, in the same cream as the game's icons. Before, it showed a copy of the Switch List icon.
+
+### 0.1.0 (2026-11-07)
+- First release: a window of the cars off the railroad, grouped by interchange, with what they went for and when they'll be back.
