@@ -62,6 +62,11 @@ namespace Anticipation
                 builder.AddLabelEmptyState("No cars are off the railroad. Cars sent through an interchange to be loaded, equipment you've bought, and Load Broker orders show up here until they're on the railroad.");
                 return;
             }
+            builder.ButtonStrip(strip =>
+            {
+                strip.AddButtonSelectable("Log", !TableView, () => { TableView = false; builder.Rebuild(); });
+                strip.AddButtonSelectable("Table", TableView, () => { TableView = true; builder.Rebuild(); });
+            });
             builder.VScrollView(scroll =>
             {
                 foreach (IGrouping<string, Away> byInterchange in all.GroupBy(a => a.Interchange?.DisplayName ?? "Off the railroad"))
@@ -71,6 +76,11 @@ namespace Anticipation
                         : $"{byInterchange.Key}  ({byInterchange.Sum(a => CarCount(a)).Pluralize("car")})";
                     scroll.AddSection(heading, section =>
                     {
+                        if (TableView)
+                        {
+                            Table(section, byInterchange);
+                            return;
+                        }
                         foreach (Away away in byInterchange)
                         {
                             Away row = away;
@@ -79,6 +89,68 @@ namespace Anticipation
                     });
                 }
             });
+        }
+
+        // Which view the window shows; remembered between games.
+        private const string ViewPref = "jamesplotts.anticipation.view";
+        private static bool? _tableView;
+
+        private static bool TableView
+        {
+            get
+            {
+                if (!_tableView.HasValue)
+                {
+                    try { _tableView = PlayerPrefs.GetInt(ViewPref, 1) == 1; }
+                    catch (Exception) { _tableView = true; }
+                }
+                return _tableView.Value;
+            }
+            set
+            {
+                _tableView = value;
+                try { PlayerPrefs.SetInt(ViewPref, value ? 1 : 0); }
+                catch (Exception) { }
+            }
+        }
+
+        private const float CarColumn = 110f, TimeColumn = 150f;
+
+        // One row per car: its number, when it's due on the railroad, and what it went for.
+        private static void Table(UIPanelBuilder section, IEnumerable<Away> group)
+        {
+            section.HStack(row =>
+            {
+                row.AddLabel("<b>Car #</b>").Width(CarColumn);
+                row.AddLabel("<b>Arrival Time</b>").Width(TimeColumn);
+                row.AddLabel("<b>Description</b>").FlexibleWidth();
+            });
+            foreach (Away away in group)
+            {
+                Away a = away;
+                List<string> cars = away.OnOrder ? new List<string> { "On order" } : Shown(away).Select(c => c.DisplayName).ToList();
+                if (cars.Count == 0)
+                    cars = away.Cars.Select(c => c.DisplayName).ToList();
+                foreach (string car in cars)
+                {
+                    section.HStack(row =>
+                    {
+                        row.AddLabel(car).Width(CarColumn);
+                        row.AddLabel(() => Arrival(a), UIPanelBuilder.Frequency.Periodic).Width(TimeColumn);
+                        row.AddLabel(a.What + (a.HeldOver ? " <color=#E0A040>(held over: the interchange was full)</color>" : "")).FlexibleWidth();
+                    });
+                }
+            }
+        }
+
+        private static string Arrival(Away away)
+        {
+            GameDateTime now = TimeWeather.Now;
+            if (away.Expected <= now)
+                return "Any moment";
+            string day = Day(away.Expected, now);
+            day = char.ToUpper(day[0]) + day.Substring(1);
+            return $"{day} {away.Expected.TimeString()}\n<size=85%>in {away.Expected.IntervalString(now, GameDateTimeInterval.Style.Short)}</size>";
         }
 
         // Tenders ride with their engine; name the engine only, as the game's own notices do.

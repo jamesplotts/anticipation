@@ -14,7 +14,12 @@ Send a car through an interchange to be loaded, such as coal from Carolina Fuel 
   - a "held over" note if the car missed its service because the interchange was full. It's then expected at the next service.
 - If you also run [Load Broker](https://www.nexusmods.com/railroader/mods/2376), the carloads you've ordered through it are listed too, as "On order (Load Broker)", with when they'll arrive. Neither mod needs the other.
 - Equipment you've bought and are waiting for is listed too, with the price you paid.
+- **Log** and **Table** buttons at the top switch views. Table lists one row per car with three columns: Car #, Arrival Time and Description. Log shows each group of cars with what it went for and when it's back. The window remembers your choice.
 - The list updates by itself as cars leave and come back, and the countdowns tick down as the clock runs.
+
+## Known conflict
+
+A player reports that with Anticipation and an East Whittier yard mod (in particular BMR's MOW yard expansion) both installed, the track there flashes in and out, and removing one or the other stops it. The cause isn't known: Anticipation has no Harmony patches and doesn't touch track or map data. Reports with a mod list and Player.log are welcome.
 
 ## Install
 
