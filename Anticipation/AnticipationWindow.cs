@@ -78,7 +78,7 @@ namespace Anticipation
                     {
                         if (TableView)
                         {
-                            Table(section, byInterchange);
+                            Table(section, byInterchange, builder);
                             return;
                         }
                         foreach (Away away in byInterchange)
@@ -116,30 +116,92 @@ namespace Anticipation
 
         private const float CarColumn = 110f, TimeColumn = 150f;
 
+        // Which column the table is sorted by, and which way. Click a heading to sort by it; click
+        // it again to reverse.
+        private enum SortBy { Car, Arrival, Description }
+        private static SortBy _sortBy = SortBy.Arrival;
+        private static bool _descending;
+
+        private static string Heading(string text, SortBy column) =>
+            _sortBy == column ? $"<b>{text} {(_descending ? "\u25BC" : "\u25B2")}</b>" : $"<b>{text}</b>";
+
+        private static void SortOn(SortBy column, UIPanelBuilder window)
+        {
+            if (_sortBy == column)
+                _descending = !_descending;
+            else
+            {
+                _sortBy = column;
+                _descending = false;
+            }
+            window.Rebuild();
+        }
+
         // One row per car: its number, when it's due on the railroad, and what it went for.
-        private static void Table(UIPanelBuilder section, IEnumerable<Away> group)
+        private static void Table(UIPanelBuilder section, IEnumerable<Away> group, UIPanelBuilder window)
         {
             section.HStack(row =>
             {
-                row.AddLabel("<b>Car #</b>").Width(CarColumn);
-                row.AddLabel("<b>Arrival Time</b>").Width(TimeColumn);
-                row.AddLabel("<b>Description</b>").FlexibleWidth();
+                row.AddButton(Heading("Car #", SortBy.Car), () => SortOn(SortBy.Car, window)).Width(CarColumn);
+                row.AddButton(Heading("Arrival Time", SortBy.Arrival), () => SortOn(SortBy.Arrival, window)).Width(TimeColumn);
+                row.AddButton(Heading("Description", SortBy.Description), () => SortOn(SortBy.Description, window)).RectTransform.FlexibleWidth();
             });
+            var rows = new List<(string car, Away away)>();
             foreach (Away away in group)
             {
-                Away a = away;
                 List<string> cars = away.OnOrder ? new List<string> { "On order" } : Shown(away).Select(c => c.DisplayName).ToList();
                 if (cars.Count == 0)
                     cars = away.Cars.Select(c => c.DisplayName).ToList();
-                foreach (string car in cars)
+                rows.AddRange(cars.Select(c => (c, away)));
+            }
+            IOrderedEnumerable<(string car, Away away)> sorted;
+            switch (_sortBy)
+            {
+                case SortBy.Car:
+                    sorted = _descending ? rows.OrderByDescending(r => r.car, CarNumberOrder.Instance) : rows.OrderBy(r => r.car, CarNumberOrder.Instance);
+                    break;
+                case SortBy.Description:
+                    sorted = _descending ? rows.OrderByDescending(r => r.away.What, StringComparer.OrdinalIgnoreCase) : rows.OrderBy(r => r.away.What, StringComparer.OrdinalIgnoreCase);
+                    break;
+                default:
+                    sorted = _descending ? rows.OrderByDescending(r => r.away.Expected.TotalSeconds) : rows.OrderBy(r => r.away.Expected.TotalSeconds);
+                    break;
+            }
+            foreach ((string car, Away away) in sorted.ThenBy(r => r.car, CarNumberOrder.Instance))
+            {
+                Away a = away;
+                section.HStack(row =>
                 {
-                    section.HStack(row =>
-                    {
-                        row.AddLabel(car).Width(CarColumn);
-                        row.AddLabel(() => Arrival(a), UIPanelBuilder.Frequency.Periodic).Width(TimeColumn);
-                        row.AddLabel(a.What + (a.HeldOver ? " <color=#E0A040>(held over: the interchange was full)</color>" : "")).FlexibleWidth();
-                    });
-                }
+                    row.AddLabel(car).Width(CarColumn);
+                    row.AddLabel(() => Arrival(a), UIPanelBuilder.Frequency.Periodic).Width(TimeColumn);
+                    row.AddLabel(a.What + (a.HeldOver ? " <color=#E0A040>(held over: the interchange was full)</color>" : "")).FlexibleWidth();
+                });
+            }
+        }
+
+        // Car numbers in number order: "SR 99" before "SR 1203", then by railroad mark.
+        private sealed class CarNumberOrder : IComparer<string>
+        {
+            public static readonly CarNumberOrder Instance = new CarNumberOrder();
+
+            public int Compare(string x, string y)
+            {
+                (string mark, long number) a = Split(x), b = Split(y);
+                int c = string.Compare(a.mark, b.mark, StringComparison.OrdinalIgnoreCase);
+                if (c != 0)
+                    return c;
+                c = a.number.CompareTo(b.number);
+                return c != 0 ? c : string.Compare(x, y, StringComparison.OrdinalIgnoreCase);
+            }
+
+            private static (string, long) Split(string s)
+            {
+                s = s ?? "";
+                int i = s.Length;
+                while (i > 0 && char.IsDigit(s[i - 1]))
+                    i--;
+                long n = i < s.Length && long.TryParse(s.Substring(i), out long v) ? v : -1;
+                return (s.Substring(0, i).Trim(), n);
             }
         }
 

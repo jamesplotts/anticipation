@@ -14,7 +14,7 @@ Send a car through an interchange to be loaded, such as coal from Carolina Fuel 
   - a "held over" note if the car missed its service because the interchange was full. It's then expected at the next service.
 - If you also run [Load Broker](https://www.nexusmods.com/railroader/mods/2376), the carloads you've ordered through it are listed too, as "On order (Load Broker)", with when they'll arrive. Neither mod needs the other.
 - Equipment you've bought and are waiting for is listed too, with the price you paid.
-- **Log** and **Table** buttons at the top switch views. Table lists one row per car with three columns: Car #, Arrival Time and Description. Log shows each group of cars with what it went for and when it's back. The window remembers your choice.
+- **Log** and **Table** buttons at the top switch views. Table lists one row per car with three columns: Car #, Arrival Time and Description; click a heading to sort by it, again to reverse. Log shows each group of cars with what it went for and when it's back. The window remembers your choice.
 - The list updates by itself as cars leave and come back, and the countdowns tick down as the clock runs.
 
 ## Known conflict
@@ -37,6 +37,9 @@ Copy `Paths.user.example` to `Paths.user` and set `GameDir` (and `ModDevDir` for
 MIT licensed.
 
 ## Changelog
+
+### 0.2.1 (2026-11-23)
+- Click a column heading in the Table view (Car #, Arrival Time or Description) to sort by it; click it again to reverse. An arrow marks the sorted column. Car numbers sort in number order.
 
 ### 0.2.0 (2026-11-23)
 - New **Table** view: one row per car, in three columns: Car #, Arrival Time (with a countdown) and Description. Still grouped by interchange.
